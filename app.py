@@ -4,8 +4,8 @@ import numpy as np
 from PIL import Image
 
 # Load model and features
-model = joblib.load('lung_model (5).joblib')
-features = joblib.load('features (4).joblib')
+model = joblib.load('lung_model .joblib')
+features = joblib.load('features .joblib')
 
 # Set page config
 st.set_page_config(page_title="Lung Cancer Predictor", layout="centered")
