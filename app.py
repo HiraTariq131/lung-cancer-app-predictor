@@ -1,98 +1,89 @@
 import streamlit as st
-import numpy as np
 import joblib
+import numpy as np
 from PIL import Image
 
 # Load model and features
-model = joblib.load("lung_model (3).joblib")
-features = joblib.load("features (3).joblib")
+model = joblib.load('lung_model (5).joblib')
+features = joblib.load('features (4).joblib')
 
-# Set background image
-def set_background(image_file):
-    with open(image_file, "rb") as image:
-        encoded = image.read()
-    st.markdown(
-        f"""
+# Set page config
+st.set_page_config(page_title="Lung Cancer Predictor", layout="centered")
+
+# Set background image with custom CSS
+def set_bg():
+    st.markdown(f"""
         <style>
         .stApp {{
-            background-image: url("data:image/jpg;base64,{encoded.encode('base64').decode()}");
+            background-image: url('blue lung image.jpg');
             background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
             color: white;
             font-weight: bold;
-            font-size: 20px;
+        }}
+        h1, h2, h3, label, .stButton > button {{
+            color: white;
+            font-size: 22px;
         }}
         </style>
-        """,
-        unsafe_allow_html=True
-    )
+    """, unsafe_allow_html=True)
 
-set_background("blue lung image.jpg")
+set_bg()
 
-st.title("💨 Lung Cancer Detection & Classification")
-st.markdown("### Please enter the following details:")
+st.title("💙 Lung Cancer Prediction App")
 
-def get_yes_no(prompt):
-    return st.radio(f"{prompt}", ["Yes", "No"]) == "Yes"
+# Define input function
+def get_input():
+    input_data = []
+    gender = st.selectbox("Gender", ["Male", "Female"])
+    input_data.append(1 if gender == "Male" else 0)
 
-# Input fields
-gender = st.selectbox("Gender", ["Male", "Female"])
-age = st.slider("Age", 18, 100, 35)
+    yes_no_fields = [
+        "Do you have yellow fingers?",
+        "Do you feel fatigue?",
+        "Do you have allergies?",
+        "Do you experience wheezing?",
+        "Do you have shortness of breath?",
+        "Do you experience swallowing difficulty?",
+        "Do you have chest pain?"
+    ]
 
-smoking = get_yes_no("Do you smoke?")
-yellow_fingers = get_yes_no("Do you have yellow fingers?")
-anxiety = get_yes_no("Do you feel anxiety?")
-peer_pressure = get_yes_no("Do you have peer pressure?")
-chronic_disease = get_yes_no("Do you have any chronic disease?")
-fatigue = get_yes_no("Do you feel fatigue?")
-allergy = get_yes_no("Do you have allergies?")
-wheezing = get_yes_no("Do you have wheezing?")
-alcohol_consuming = get_yes_no("Do you consume alcohol?")
-coughing = get_yes_no("Do you cough often?")
-shortness_of_breath = get_yes_no("Do you feel shortness of breath?")
-swallowing_difficulty = get_yes_no("Do you face difficulty swallowing?")
-chest_pain = get_yes_no("Do you feel chest pain?")
+    for field in yes_no_fields:
+        value = st.radio(field, ["Yes", "No"], horizontal=True)
+        input_data.append(1 if value == "Yes" else 0)
 
-# Convert inputs
-input_data = [
-    1 if gender == "Male" else 0,
-    age,
-    int(smoking),
-    int(yellow_fingers),
-    int(anxiety),
-    int(peer_pressure),
-    int(chronic_disease),
-    int(fatigue),
-    int(allergy),
-    int(wheezing),
-    int(alcohol_consuming),
-    int(coughing),
-    int(shortness_of_breath),
-    int(swallowing_difficulty),
-    int(chest_pain)
-]
+    return np.array([input_data])
+
+# Prediction and result display
+def predict_and_display(input_data):
+    prediction = model.predict(input_data)[0]
+    proba = model.predict_proba(input_data)[0]
+    confidence = round(np.max(proba) * 100, 2)
+
+    if prediction == 1:
+        st.error("🩺 **Prediction: Positive Lung Cancer**")
+        st.warning(f"📊 **Confidence: {confidence}%**")
+        st.markdown("### ⚠️ **Health Tip**")
+        st.markdown("- See a doctor immediately.")
+        st.markdown("- Avoid smoking, eat healthy, exercise regularly.")
+        st.markdown("- Increase intake of fruits & vegetables like **broccoli, garlic, spinach**.")
+    else:
+        st.success("✅ **Prediction: Negative Lung Cancer**")
+        st.info(f"📊 **Confidence: {confidence}%**")
+        st.markdown("### 💡 **Stay Healthy Tips**")
+        st.markdown("- Keep a smoke-free environment.")
+        st.markdown("- Exercise regularly and drink plenty of water.")
+        st.markdown("- Annual checkups are recommended.")
 
 # Buttons
-col1, col2, col3 = st.columns(3)
+input_data = None
+if st.button("🔍 Predict"):
+    input_data = get_input()
+    predict_and_display(input_data)
 
-with col1:
-    if st.button("🔍 Predict"):
-        input_array = np.array([input_data])
-        prediction = model.predict(input_array)[0]
-        confidence = model.predict_proba(input_array).max() * 100
+if st.button("🧹 Clear"):
+    st.experimental_rerun()
 
-        if prediction == 1:
-            st.markdown(f"## 🔴 **Positive Lung Cancer ({confidence:.2f}% confidence)**")
-            st.markdown("🚨 Please consult a medical professional immediately.")
-            st.markdown("🥦 **Health Tip**: Avoid smoking, get regular checkups, and maintain a healthy diet.")
-        else:
-            st.markdown(f"## 🟢 **Negative Lung Cancer ({confidence:.2f}% confidence)**")
-            st.markdown("✅ Stay healthy! No signs of lung cancer detected.")
-            st.markdown("🥗 **Health Tip**: Eat fruits, veggies, stay active, and avoid smoking.")
-
-with col2:
-    if st.button("🔄 Clear"):
-        st.experimental_rerun()
-
-with col3:
-    if st.button("❌ Exit"):
-        st.stop()
+if st.button("❌ Exit"):
+    st.stop()
