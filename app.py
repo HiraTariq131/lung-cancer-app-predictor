@@ -4,8 +4,8 @@ import numpy as np
 from PIL import Image
 
 # Load model and features
-model = joblib.load('lung_model.joblib')
-features = joblib.load('features.joblib')
+model = joblib.load('lung_model (1).joblib')
+features = joblib.load('features (1).joblib')
 
 # Background image
 page_bg = f"""
